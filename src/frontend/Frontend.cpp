@@ -215,6 +215,18 @@ hdoc::frontend::Frontend::Frontend(int argc, char** argv, hdoc::types::Config* c
     }
   }
 
+  // get substrings of names that should be ignored
+  if (const auto& ignores = toml["ignore"]["names"].as_array()) {
+    for (const auto& i : *ignores) {
+      std::string s = i.value_or(std::string(""));
+      if (s.empty()) {
+        spdlog::warn("An ignore directive from .hdoc.toml was malformed, ignoring it.");
+        continue;
+      }
+      cfg->ignoreNames.emplace_back(s);
+    }
+  }
+
   if (const toml::value<bool>* ignorePrivateMembers = toml["ignore"]["ignore_private_members"].as_boolean()) {
     cfg->ignorePrivateMembers = ignorePrivateMembers->get();
   }

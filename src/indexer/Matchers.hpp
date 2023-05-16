@@ -14,7 +14,7 @@
 
 namespace hdoc::indexer::matchers {
 
-AST_MATCHER_P2(clang::Decl, shouldBeIgnored, std::vector<std::string>, ignoreList, std::filesystem::path, rootDir) {
+AST_MATCHER_P2(clang::Decl, ignoreByFilePath, std::vector<std::string>, ignoreList, std::filesystem::path, rootDir) {
   (void)Builder; // Avoid unused variable warning
   if (ignoreList.size() == 0) {
     return false;
@@ -40,6 +40,15 @@ AST_MATCHER_P2(clang::Decl, shouldBeIgnored, std::vector<std::string>, ignoreLis
   return false;
 } // namespace internal
 
+AST_MATCHER_P(clang::NamedDecl, ignoreByFQN, std::vector<std::string>, ignoreList) {
+  (void)Builder;
+  if (ignoreList.empty()) {
+    return false;
+  }
+  auto name = Node.getQualifiedNameAsString();
+  return std::ranges::any_of(ignoreList, [&name](auto substr) {return name.find(substr) != std::string::npos;});
+}
+
 class RecordMatcher : public clang::ast_matchers::MatchFinder::MatchCallback {
 public:
   virtual void run(const clang::ast_matchers::MatchFinder::MatchResult& Result);
@@ -59,7 +68,8 @@ public:
                    clang::ast_matchers::isTemplateInstantiation(),
                    clang::ast_matchers::isInstantiated(),
                    clang::ast_matchers::isExplicitTemplateSpecialization(),
-                   hdoc::indexer::matchers::shouldBeIgnored(this->cfg->ignorePaths, this->cfg->rootDir))))
+                   hdoc::indexer::matchers::ignoreByFQN(this->cfg->ignoreNames),
+                   hdoc::indexer::matchers::ignoreByFilePath(this->cfg->ignorePaths, this->cfg->rootDir))))
         .bind("record");
   }
 };
@@ -82,7 +92,8 @@ public:
                    clang::ast_matchers::isTemplateInstantiation(),
                    clang::ast_matchers::isInstantiated(),
                    clang::ast_matchers::isExplicitTemplateSpecialization(),
-                   hdoc::indexer::matchers::shouldBeIgnored(this->cfg->ignorePaths, this->cfg->rootDir))))
+                   hdoc::indexer::matchers::ignoreByFQN(this->cfg->ignoreNames),
+                   hdoc::indexer::matchers::ignoreByFilePath(this->cfg->ignorePaths, this->cfg->rootDir))))
         .bind("function");
   }
 };
@@ -103,7 +114,8 @@ public:
                    clang::ast_matchers::isInStdNamespace(),
                    clang::ast_matchers::isExpansionInSystemHeader(),
                    clang::ast_matchers::isImplicit(),
-                   hdoc::indexer::matchers::shouldBeIgnored(this->cfg->ignorePaths, this->cfg->rootDir))))
+                   hdoc::indexer::matchers::ignoreByFQN(this->cfg->ignoreNames),
+                   hdoc::indexer::matchers::ignoreByFilePath(this->cfg->ignorePaths, this->cfg->rootDir))))
         .bind("enum");
   }
 };
@@ -122,7 +134,8 @@ public:
                    clang::ast_matchers::isInStdNamespace(),
                    clang::ast_matchers::isExpansionInSystemHeader(),
                    clang::ast_matchers::isImplicit(),
-                   hdoc::indexer::matchers::shouldBeIgnored(this->cfg->ignorePaths, this->cfg->rootDir))))
+                   hdoc::indexer::matchers::ignoreByFQN(this->cfg->ignoreNames),
+                   hdoc::indexer::matchers::ignoreByFilePath(this->cfg->ignorePaths, this->cfg->rootDir))))
         .bind("namespace");
   }
 };
