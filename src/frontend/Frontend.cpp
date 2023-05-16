@@ -129,6 +129,11 @@ hdoc::frontend::Frontend::Frontend(int argc, char** argv, hdoc::types::Config* c
     cfg->numThreads = rawNumThreads;
   }
 
+
+  if (const toml::value<bool>* hideHdocMenu = toml["project"]["hide_hdoc_menu"].as_boolean()) {
+    cfg->hideHdocMenu = hideHdocMenu->get();
+  }
+
   // Determine the compiler's builtin include paths and add them to the list
   cfg->useSystemIncludes = toml["includes"]["use_system_includes"].value_or(true);
   if (cfg->useSystemIncludes == true) {

@@ -177,7 +177,9 @@ static void printNewPage(const hdoc::types::Config&   cfg,
   if (cfg.gitRepoURL != "") {
     menuUL.AddChild(CTML::Node("li").AddChild(CTML::Node("a", "Repository").SetAttr("href", cfg.gitRepoURL)));
   }
-  menuUL.AddChild(CTML::Node("li").AddChild(CTML::Node("a", "Made with hdoc").SetAttr("href", "https://hdoc.io")));
+  if (!cfg.hideHdocMenu) {
+    menuUL.AddChild(CTML::Node("li").AddChild(CTML::Node("a", "Made with hdoc").SetAttr("href", "https://hdoc.io")));
+  }
 
   // Add paths to markdown pages converted to HTML, if any were provided
   if (cfg.mdPaths.size() > 0) {
